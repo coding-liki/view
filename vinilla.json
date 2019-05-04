@@ -1,0 +1,8 @@
+{
+    "vendor": "CodingLiki",
+    "version": "0.1",
+    "depends_on": [
+        "CodingLiki/Autoloader",
+        "CodingLiki/Configs"
+    ]
+}
