@@ -9,6 +9,9 @@ use CodingLiki\Configs\Config;
  */
 
 class View{
+    protected static $my_objects_stack = [];
+    protected static $my_object_counter = 0;
+
     public static $all_values = []; // Список всех подключённых переменных за время сессии
     public $values = null; // Список подключённых переменных в текущей сессии
     public $slots = []; // Список созданных слотов и дефолтные значения в них
@@ -25,6 +28,15 @@ class View{
     public $template_path = ""; // Путь до файла с представлением
     public $need_render = true; // Флаг необходимости вывода результата
 
+    public function __construct()
+    {
+        static::$my_objects_stack[static::$my_object_counter] = $this;
+        static::$my_object_counter++;
+    }
+
+    public static function getLastObject(){
+        return static::$my_objects_stack[static::$my_object_counter-1];
+    }
     /**
      * Функция для наследования другого представления
      *
@@ -64,6 +76,9 @@ class View{
             include $this->template_path;
             $this->result_text = ob_get_contents();
             ob_end_clean();
+            
+            static::$my_object_counter--;
+            unset(static::$my_objects_stack[static::$my_object_counter]);
 
             return $this->render();
         }
