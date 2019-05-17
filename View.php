@@ -66,6 +66,9 @@ class View{
         if (!empty($values)) {
             static::$all_values = array_merge(static::$all_values, $values);
         }
+        if($view_name == ""){
+            return true;
+        }
         if(file_exists($this->template_path)){
             // echo "Можно подключать";
             foreach(static::$all_values as $key => $value){
