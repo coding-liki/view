@@ -15,7 +15,7 @@ class View{
     public static $all_values = []; // Список всех подключённых переменных за время сессии
     public $values = null; // Список подключённых переменных в текущей сессии
     public $slots = []; // Список созданных слотов и дефолтные значения в них
-
+    public $template_vars = []; // Список созданных шаблонных переменных, для хранения кусков текста
     public $slots_to_set = []; // Слоты, которые нужно заполнить в наследуемом шаблоне
 
     public $result_text; // Текст, который в итоге необходимо вывести 
@@ -23,8 +23,12 @@ class View{
 
     public $last_created_slot; // Имя последнего созданного слота
     public $last_edited_slot; // Имя последнего использованного слота
+    public $last_created_var; // Имя последней созданной шаблонной переменной
+
     public $creating_slot = false; // Флаг режима создания слота
     public $editing_slot = false; // Флаг режима использования слота
+    public $creating_var = false; //Флаг режима создания шаблонной переменной
+
     public $template_path = ""; // Путь до файла с представлением
     public $need_render = true; // Флаг необходимости вывода результата
 
@@ -170,4 +174,49 @@ class View{
 
         $this->slots[$this->last_created_slot] = $result;
     }
+
+    /****************************************** */
+    /**
+     * Создаём новую шаблонную переменную
+     *
+     * @param [type] $slot_name
+     * @return void
+     */
+    public function createVar($var_name){
+        if($this->creating_var){
+            return;
+        }
+
+        $this->creating_var = true;
+
+        ob_start();
+        $this->last_created_var = $var_name;
+    }
+
+    /**
+     * Завершаем создание новой шаблонной переменной и сохраняем её значение
+     *
+     * @return void
+     */
+    public function stopCreateVar(){
+        if(!$this->creating_var){
+            return;
+        }
+
+        $this->creating_var = false;
+
+        $result = ob_get_contents();
+        ob_end_clean();
+
+        $this->template_vars[$this->last_created_var] = $result;
+    }
+
+    public function getVar($var_name, $default_value = ""){
+        if(isset($this->template_vars[$var_name])){
+            return $this->template_vars[$var_name];
+        } else {
+            return $default_value;
+        }
+    }
+
 }
