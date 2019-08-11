@@ -1,7 +1,10 @@
 {
-    "vendor": "CodingLiki",
-    "version": "0.1",
-    "depends_on": [
+    "name":"View",
+    "vendor":"CodingLiki",
+    "description":"Гибкий PHP шаблонизатор",
+    "version":"0.1",
+    "repo_url":"https://github.com/coding-liki/view.git",
+    "depends_on":[
         "CodingLiki/Autoloader",
         "CodingLiki/Configs"
     ]

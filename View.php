@@ -11,10 +11,12 @@ use CodingLiki\Configs\Config;
 class View{
     protected static $my_objects_stack = [];
     protected static $my_object_counter = 0;
-
+    const END_PREPEND = 0;
+    const END_SUBSTITUTE = 1;
+    const END_APPEND = 2; 
     public static $all_values = []; // Список всех подключённых переменных за время сессии
     public $values = null; // Список подключённых переменных в текущей сессии
-    public $slots = []; // Список созданных слотов и дефолтные значения в них
+    public static $slots = []; // Список созданных слотов и дефолтные значения в них
     public $template_vars = []; // Список созданных шаблонных переменных, для хранения кусков текста
     public $slots_to_set = []; // Слоты, которые нужно заполнить в наследуемом шаблоне
 
@@ -31,7 +33,7 @@ class View{
 
     public $template_path = ""; // Путь до файла с представлением
     public $need_render = true; // Флаг необходимости вывода результата
-
+    public $extension  = ".php";
     public function __construct()
     {
         static::$my_objects_stack[static::$my_object_counter] = $this;
@@ -52,7 +54,7 @@ class View{
 
         $this->result_text = $this->parent_view->parse($view_name, $this->values);
         
-        $this->slots_to_set = $this->parent_view->slots;
+        $this->slots_to_set = static::$slots+$this->parent_view->slots_to_set;
     }
 
     /**
@@ -65,7 +67,7 @@ class View{
     public function parse($view_name, $values = []){
         $views_folder = Config::config("main.views_folder") ?? "Views";
 
-        $this->template_path = $views_folder."/$view_name.php";
+        $this->template_path = $views_folder."/$view_name".$this->extension;
         $this->values = $values;
         if (!empty($values)) {
             static::$all_values = array_merge(static::$all_values, $values);
@@ -107,6 +109,7 @@ class View{
         if ($this->need_render) {
             echo $result;
         }
+
         return $result;
     }
 
@@ -130,12 +133,28 @@ class View{
      *
      * @return void
      */
-    public function endSlot(){
+    public function endSlot($end_type = self::END_SUBSTITUTE){
         if(!$this->editing_slot){
             return;
         }
         $this->editing_slot = false;
-        $this->slots_to_set[$this->last_edited_slot] = ob_get_contents();
+        switch($end_type){
+            case self::END_APPEND:
+                if(!isset($this->slots_to_set[$this->last_edited_slot])){
+                    $this->slots_to_set[$this->last_edited_slot] = ob_get_contents();
+                } else {
+                    $this->slots_to_set[$this->last_edited_slot] .= ob_get_contents();
+                }
+                break;
+            case self::END_PREPEND:
+                $this->slots_to_set[$this->last_edited_slot] = ob_get_contents().$this->slots_to_set[$this->last_edited_slot];
+                break;
+            
+            case self::END_SUBSTITUTE:
+            default:
+                $this->slots_to_set[$this->last_edited_slot] = ob_get_contents();
+                break;
+        }
         ob_end_clean();
     }
 
@@ -172,7 +191,7 @@ class View{
         $result = ob_get_contents();
         ob_end_clean();
 
-        $this->slots[$this->last_created_slot] = $result;
+        static::$slots[$this->last_created_slot] = $result;
     }
 
     /****************************************** */
