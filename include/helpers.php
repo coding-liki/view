@@ -54,11 +54,6 @@ function view($view_name, $values = [], $need_render = true){
     }
 }
 
-function test_this(){
-    $last = View::getLastObject();
-    echo $last->template_path;
-}
-
 function print_g($var){
     echo "<pre>";
     print_r($var);
